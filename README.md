@@ -8,7 +8,7 @@ As future steps we plan to add a conversion also for PDKB-PDDL, the input langua
 ## Acknowledgements
 The planner inherits its basic structure from the parser in: https://github.com/pucrs-automated-planning/pddl-parser
 
-###How to Run
+### How to Run
 To run this simple instance simply call the program giving it the name of the domain and of the problem as input.
 The program will generate the input file for EFP 2.0 in the 'out' folder.
 The file will be named following this pattern: "domain_file_name" + "_" + "problem_file_name" + ".txt"
