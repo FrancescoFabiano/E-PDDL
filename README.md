@@ -6,8 +6,12 @@ The repository contains the initial version of a parser that converts E-PDDL doa
 As future steps we plan to add a conversion also for PDKB-PDDL, the input language for another epistemic planner: PDKB (Muise et al. 2015).
 
 ## Acknowledgements
-THe planner inherits its basic structure from the parser in: https://github.com/pucrs-automated-planning/pddl-parser
+The planner inherits its basic structure from the parser in: https://github.com/pucrs-automated-planning/pddl-parser
 
+###How to Run
+To run this simple instance simply call the program giving it the name of the domain and of the problem as input.
+The program will generate the input file for EFP 2.0 in the 'out' folder.
+The file will be named following this pattern: "domain_file_name" + "_" + "problem_file_name" + ".txt"
 
 #### Bibliography
 Fabiano, F.; Burigana, A.; Dovier, A.; and Pontelli, E. 2020.

@@ -3,6 +3,7 @@
 
 import re
 import itertools
+from pathlib import Path
 
 from action import Action
 
@@ -387,7 +388,6 @@ class PDDL_Parser:
                     fa_start = "FASTART"
                     fa_stop = "FASTOP"
                     rule = body[0]
-                    print("Rule: " + str(rule))
                     body.pop(0)
                     for v in head:
                         if '?' in v:
@@ -424,127 +424,6 @@ class PDDL_Parser:
                 positive.append((body, head_positive, head_negative))
             return (body, 0)
 
-    # def split_effects(self, group, positive, negative, name, part):
-    #     if not type(group) is list:
-    #         raise Exception('Error with ' + name + part)
-    #     while len(group) != 0 and (group[0] == 'and' or group[0]=='when'):
-    #         if group[0] == 'and':
-    #             group.pop(0)
-    #         elif group[0] == 'when':
-    #             group.pop(0)
-    #             condition = group[0]
-    #             group.pop(0)
-    #             self.cond_eff(group[0], positive, negative, condition, name, part)
-    #             group.pop(0)
-    #             group.insert(0,'and')
-    #             self.split_effects(group, positive, negative, name, part)
-    #         else:
-    #             group = [group]
-    #
-    #     for predicate in group:
-    #         if predicate[0] == 'not':
-    #             if len(predicate) != 2:
-    #                 raise Exception('Unexpected not in ' + name + part)
-    #             to_add = (predicate[-1], '')
-    #             negative.append(to_add)
-    #         else:
-    #             to_add = (predicate, '')
-    #             positive.append(to_add)
-    #
-    # def cond_eff(self, group, positive, negative, condition, name, part):
-    #     if not type(group) is list:
-    #         raise Exception('Error with ' + name + part)
-    #     if group[0] == 'and':
-    #         group.pop(0)
-    #     else:
-    #         group = [group]
-    #     for predicate in group:
-    #         if predicate[0] == 'not':
-    #             if len(predicate) != 2:
-    #                 raise Exception('Unexpected not in ' + name + part)
-    #             to_add = (predicate[-1], condition)
-    #             negative.append(to_add)
-    #         else:
-    #             to_add = (predicate, condition)
-    #             positive.append(to_add)
-
-
-    # def cond_obs(self, group, name,  obs, condition, part):
-    #     if group[0] == 'and':
-    #         group.pop(0)
-    #     else:
-    #         group = [group]
-    #     for ag in group:
-    #         if ag[0] == 'not':
-    #             raise Exception('Unexpected not in ' + name + part)
-    #         else:
-    #             to_add = (ag, condition)
-    #             obs.append(to_add)
-
-
-    # def read_observer(self, group, obs, name, part):
-    #     while len(group) != 0 and (group[0] == 'and' or group[0]=='when' or group[0]=='forall'):
-    #         if group[0] == 'and':
-    #             group.pop(0)
-    #         elif group[0] == 'when':
-    #             group.pop(0)
-    #             condition = group[0]
-    #             group.pop(0)
-    #             self.cond_obs(group[0], obs, condition, name, part)
-    #             group.pop(0)
-    #             group.insert(0,'and')
-    #             self.read_observer(group, obs, name, part)
-    #         elif group[0] == 'forall':
-    #             group.pop(0)
-    #             association = group[0]
-    #             group.pop(0)
-    #             body = self.forall_obs(group[0], association, name, part)
-    #             group.pop(0)
-    #             b_count = 0
-    #             while b_count < len(body):
-    #                 group.insert(b_count,body[b_count])
-    #                 b_count+= 1
-    #             print("Group: " + str(group))
-    #             self.read_observer(group, obs, name, part)
-    #         else:
-    #             group = [group]
-    #     for ag in group:
-    #         if ag[0] == 'not':
-    #             raise Exception('Unexpected not in ' + name + part)
-    #         else:
-    #             ag_list = []
-    #             ag_list.insert(0,ag)
-    #             to_add = (ag_list, '')
-    #             obs.append(to_add)
-    #
-    # def cond_obs(self, group, obs, condition, name, part):
-    #     if not type(group) is list:
-    #         raise Exception('Error with ' + name + part)
-    #     if group[0] == 'and':
-    #         group.pop(0)
-    #     else:
-    #         group = [group]
-    #     for ag in group:
-    #         to_add = (ag, condition)
-    #         obs.append(to_add)
-    #
-    # def forall_obs(self, body, association, name, part):
-    #     for v in association:
-    #         if '?' in v:
-    #             if v in body:
-    #                 body[body.index(v)] =  "FORALL" + body[body.index(v)] + "FORALL"
-    #             elif body[0] == 'when':
-    #                 tmp_body = body[1]
-    #                 tmp_body[tmp_body.index(v)] =  "FORALL" + tmp_body[tmp_body.index(v)] + "FORALL"
-    #                 body[1] = tmp_body
-    #                 tmp_body = body[2]
-    #                 tmp_body[tmp_body.index(v)] =  "FORALL" + tmp_body[tmp_body.index(v)] + "FORALL"
-    #                 body[2] = tmp_body
-    #             else:
-    #                 raise Exception('To many nested command in the agents\' observability')
-    #     print("Body: "+ str(body))
-    #     return body
-
 
 
     def assign_act_type(self, name):
@@ -560,8 +439,14 @@ class PDDL_Parser:
     #-----------------------------------------------
     def print_EFP(self):
         #########File NAME
+        output_folder = "out"
+        Path(output_folder).mkdir(exist_ok=True)
+
+
+
+
         file_name = self.domain_name + '_' + self.problem_name
-        out = open(file_name+".txt", "w")
+        out = open(output_folder + "/" + file_name+".txt", "w")
         out.write("%This file is automatically generated from an E-PDDL specification and follows the mAp syntax.\n\n")
 
         #Generate grounded actions and add grounded fluents
@@ -834,7 +719,6 @@ class PDDL_Parser:
 
                             self.substitute_ag(tmp_pos_cond,agent)
                             self.substitute_ag(tmp_neg_cond,agent)
-                            print("Replaced: " + str(tmp_neg_cond))
 
                             self.print_conditions(tmp_pos_cond,tmp_neg_cond,out)
                             out.write(';\n')
@@ -900,6 +784,8 @@ if __name__ == '__main__':
     parser.parse_problem(problem)
     parser.print_EFP()
     fluents = set()
+    print("\nThe file has been correctly converted.")
+    print("The resulting file is in the \'out\' folder.\n")
 #    print('State: ' + str(parser.state))
 #    for act in parser.actions:
 #        print(act)
