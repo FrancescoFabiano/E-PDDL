@@ -712,20 +712,38 @@ class PDDL_Parser:
                 for ag in ags[0]:
                     if 'FASTART' in ag:
                         for agent in self.objects['agent']:
-                            tmp_pos_cond = ags[1]
-                            tmp_neg_cond = ags[2]
-                            agent = str(agent)
+                            tmp_cond = [[]]
+                            self.copy_cond_list(ags,tmp_cond)
+
                             out.write(agent + obs_type + action.name)
+                            self.substitute_ag(tmp_cond[1],agent)
+                            self.substitute_ag(tmp_cond[2],agent)
 
-                            self.substitute_ag(tmp_pos_cond,agent)
-                            self.substitute_ag(tmp_neg_cond,agent)
-
-                            self.print_conditions(tmp_pos_cond,tmp_neg_cond,out)
+                            self.print_conditions(tmp_cond[1],tmp_cond[2],out)
                             out.write(';\n')
                     else:
                         out.write(str(ag) + obs_type + action.name)
                         self.print_conditions(ags[1],ags[2],out)
                         out.write(';\n')
+
+    def copy_cond_list(self, agents, temp):
+        i = 0
+        while i < len(agents):
+            sub_temp = []
+            j = 0
+            while j < len(agents[i]):
+                if i > 0:
+                    k = 0
+                    sub_sub_temp = []
+                    while k < len(agents[i][j]):
+                        sub_sub_temp.insert(k,agents[i][j][k])
+                        k = k+1
+                else:
+                    sub_sub_temp = agents[i][j]
+                sub_temp.insert(j, sub_sub_temp)
+                j = j+1
+            temp.insert(i, sub_temp)
+            i = i+1
 
     def substitute_ag(self, conds, agent):
         for cond in conds:
@@ -746,7 +764,7 @@ class PDDL_Parser:
                 condition.remove('')
 
         for condition in conditions:
-            if  not condition:
+            if not condition:
                 conditions.remove(condition)
 
         if conditions:

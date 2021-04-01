@@ -1,14 +1,14 @@
 (define (domain coin_in_the_box)
   (:requirements :strips :negative-preconditions :no-duplicates :mep)
-  (:predicates (opened) (has_key ?ag -agent) (looking ?ag - agent) (tail))
+  (:predicates (opened) (has_key ?ag - agent) (looking ?ag - agent) (tail))
  
 
   (:action open
 	:act_type 	ontic
     :parameters (?ag - agent)
-    :precondition (and ([?ag](has_key ?ag1)) (has_key ?ag))
+    :precondition (and ([?ag](has_key ?ag)) (has_key ?ag))
     :effect (opened)
-	:observers (and (forall (?ag2 - agent) (when (looking ?ag2) (?ag2))) (?ag1))
+	:observers (and (forall (?ag2) (when (looking ?ag2) (?ag2))) (?ag))
   )
 
   (:action peek
@@ -17,7 +17,7 @@
     :precondition (and ([?ag](opened)) ([?ag](looking ?ag)) (looking ?ag) (opened))
     :effect (tail)
 	:observers	(?ag)
-	:p_observers (and (forall (?ag2 - agent) (when (?ag != ?ag2)((when (looking ?ag2) (?ag2))))))
+	:p_observers (and (forall (?ag2 - agent) (when (looking ?ag2) (?ag2))))
 	)
   
 
@@ -40,7 +40,7 @@
     :parameters (?ag - agent)
     :precondition (and ([?ag](tail)) (tail))
     :effect (tail)
-	:observers (and (forall (?ag2 - agent) (when (?ag != ?ag2)((when (looking ?ag2) (?ag2))))) (?ag))
+	:observers (and (forall (?ag2 - agent) (when (looking ?ag2) (?ag2))) (?ag))
    )
 	
 )
