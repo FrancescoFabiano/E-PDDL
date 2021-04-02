@@ -6,7 +6,7 @@
   (:action open
 	:act_type 	ontic
     :parameters (?ag - agent)
-    :precondition (and ([?ag](has_key ?ag)) ([?ag](not (has_key ?ag))) (has_key ?ag))
+    :precondition (and ([?ag](has_key ?ag)) (has_key ?ag))
     :effect (opened)
 	:observers (and (forall (diff(?ag2)(?ag)) (when (looking ?ag2) (?ag2))) (?ag))
   )
@@ -23,14 +23,14 @@
 
   (:action signal
     :parameters (?ag1 ?ag2 - agent)
-    :precondition (and ([?ag1](looking ?ag1)) (looking ?ag1) (not ([?ag2](looking ?ag2))) (not (looking ?ag2)))
+    :precondition (and ([?ag1](looking ?ag1)) ([?ag2](not (looking ?ag2))) )
     :effect (looking ?ag2)
 	:observers (?ag1 ?ag2)
   )
 
   (:action distract
     :parameters (?ag1 ?ag2 - agent)
-    :precondition (and ([?ag1](looking ?ag1)) (looking ?ag1) ([?ag2](looking ?ag2)) (looking ?ag2))
+    :precondition (and ([?ag1](looking ?ag1)) ([?ag2](looking ?ag2)))
     :effect (not (looking ?ag2))
 	:observers (?ag1 ?ag2)
   )

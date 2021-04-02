@@ -16,8 +16,8 @@ class Action:
         self.name = name
         self.act_type = act_type
         self.parameters = parameters
-        self.positive_preconditions = frozenset_of_tuples(positive_preconditions)
-        self.negative_preconditions = frozenset_of_tuples(negative_preconditions)
+        self.positive_preconditions = positive_preconditions
+        self.negative_preconditions = negative_preconditions
         self.add_effects = add_effects
         self.del_effects = del_effects
         self.observers = observers
@@ -99,20 +99,24 @@ class Action:
             j=''
             k=''
 
-            for i in pred:
-                if 'C(' in i:
-                    j = re.sub(r'C\((.+)\,', r'C([\1],',i)
-                    pred[pred.index(i)] = j
+            #for i in pred:
+            #    if 'C(' in i:
+            #        j = re.sub(r'C\((.+)\,', r'C([\1],',i)
+            #        pred[pred.index(i)] = j
 
             for i in pred:
                 iv = 0
+                l = l+1
                 if 'B(' in i:
                     j = re.sub(r'B\((.+)\,', r'\1',i)
                     for t in variables:
                         if t == j:
                             pred[pred.index(i)] = 'B('+assignment[iv]+','
+                    if type(pred[l]) is list:
+                        tmp_list = self.replace([pred[l]],variables, assignment,fluents, to_print)
+                        pred[l] = tmp_list[0]
                 elif 'C(' in i:
-                    k = re.sub(r'C\(\[(.+)\,', r'\1',i)
+                    k = re.sub(r'C\((.+)\,', r'\1',i)
                     for j in re.findall(r'[^,]+\,', k):
                         j = j.replace(',', '')
                         for t in variables:
@@ -120,6 +124,9 @@ class Action:
                                 tmp_str = pred[pred.index(i)]
                                 tmp_str = tmp_str.replace(t,assignment[iv])
                                 pred[pred.index(i)] = tmp_str
+                    if type(pred[l]) is list:
+                        tmp_list = self.replace([pred[l]],variables, assignment,fluents, to_print)
+                        pred[l] = tmp_list[0]
                 iv += 1
 
             for i in pred:
@@ -140,8 +147,8 @@ class Action:
                     pred[pred.index(v)] = assignment[iv]
                 iv += 1
             if to_print == 1:
-                fluent = self.unify_fluent(pred)
-                if 'B(' not in fluent and 'C(' not in fluent and '!' not in fluent:
+                fluent = Action.unify_fluent(pred)
+                if 'B(' not in fluent and 'C(' not in fluent and '-' not in fluent:
                     fluents.add(fluent)
             g.append(pred)
         return g
@@ -156,17 +163,37 @@ class Action:
             g.append((body[0],positive_head,negative_head,diff))
         return g
 
-    def unify_fluent(self,list):
+    @staticmethod
+    def unify_fluent(given_list):
         fluent = ''
         l = 0
-        for i in list:
-            if 'B(' not in i and 'C(' not in i:
-                fluent += (str(i))
-                if l != len(list) -1:
-                    fluent += '_'
-                    l +=1
+        parCount = 0
+        while l < len(given_list):
+            i = given_list[l]
+            if 'C(' in i:
+                i = i.replace('C(','C([')
+                i = i[:-1]
+                i = i + '],'
+
+            if 'B(' in i or  'C(' in i:
+                parCount +=1
+                l += 1
+                fluent += i
+
+                if type(given_list[l]) is list:
+                    fluent += Action.unify_fluent(given_list[l])
+                    l += len(given_list[l])
+                #fluent += (str(i))
+
             else:
-                l+=1
+                fluent += (str(i))
+                if l != len(given_list) -1:
+                    fluent += '_'
+                l +=1
+
+        while parCount != 0:
+            fluent +=')'
+            parCount -=1
         return fluent
 
 #-----------------------------------------------

@@ -329,7 +329,7 @@ class PDDL_Parser:
                             tmp_predicate.insert(0,predicate[0])
                             while i < len(predicate[1][1]):
                                 if (i == 0):
-                                    tmp_predicate.insert(i+1,'!'+predicate[1][1][0])
+                                    tmp_predicate.insert(i+1,'-'+predicate[1][1][0])
                                 else:
                                     tmp_predicate.insert(i+1,predicate[1][1][i])
                                 i = i+1
@@ -498,7 +498,7 @@ class PDDL_Parser:
         out.write('%%%%%%%%%%%%%%%%%%%%%%%%%    FLUENTS    %%%%%%%%%%%%%%%%%%%%%%%%\n')
         out.write('%Fluents generated from EPDDL by grounding each predicate (and cheking in :init, :goal and actions for extra predicates)\n')
         out.write('%The fluents are lexicographically sorted and printed in sets of 10\n\n')
-        out.write('fluent: ')
+        out.write('fluent ')
         fl_count = 0
         for fluent in sorted(fluents):
             out.write(str(fluent))
@@ -515,7 +515,7 @@ class PDDL_Parser:
         #########Actions Names
         out.write('%%%%%%%%%%%%%%%%%%%%%    ACTIONS\' NAMES    %%%%%%%%%%%%%%%%%%%%%\n')
         out.write('%Actions\' names generated from EPDDL by adding to each action names its grounded predicates\n\n')
-        out.write('action: ')
+        out.write('action ')
         act_count = 0
         for action in ground_actions:
             out.write(action.name)
@@ -527,6 +527,23 @@ class PDDL_Parser:
                 act_count +=1
         out.write(';\n\n')
         out.write('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n\n')
+
+
+        out.write('%%%%%%%%%%%%%%%%%%%%%    AGENTS\' NAMES    %%%%%%%%%%%%%%%%%%%%%%\n')
+        out.write('%Agents\' names generated from EPDDL by looking at the \'agent\' predicate\n\n')
+        out.write('agent ')
+        ag_count = 0
+        for agent in self.objects['agent']:
+            out.write(agent)
+            if (ag_count != len(self.objects['agent'])-1):
+                if((ag_count+1)%10 == 0):
+                    out.write(';\nagent ')
+                else:
+                    out.write(', ')
+                ag_count +=1
+        out.write(';\n\n')
+        out.write('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n\n')
+
 
         #########Actions Specifications
         out.write('%%%%%%%%%%%%%%%%%    ACTIONS\' SPECIFICATIONS    %%%%%%%%%%%%%%%%\n')
@@ -566,7 +583,7 @@ class PDDL_Parser:
         out.write('initially ')
         ini_count = 0
         for ini_f in neg_fluents:
-            out.write('!'+ini_f)
+            out.write('-'+ini_f)
             if (ini_count != len(neg_fluents)-1):
                 out.write(', ')
                 ini_count+=1
@@ -604,27 +621,8 @@ class PDDL_Parser:
         out.write('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n')
         out.close()
 
-    def unify_fluent(self,list):
-        fluent = ''
-        l = 0
-        parCount = 0
-        for i in list:
-            if 'C(' in i:
-                i = i.replace('C(','C([')
-                i = i[:-1]
-                i = i + '],'
-
-            fluent += (str(i))
-            if 'B(' in i or  'C(' in i:
-                parCount +=1
-                l +=1
-            elif l != len(list) -1:
-                fluent += '_'
-                l +=1
-        while parCount != 0:
-            fluent +=')'
-            parCount -=1
-        return fluent
+    def unify_fluent(self,given_list):
+        return Action.unify_fluent(given_list)
 
     def generate_fluents_EFP(self, fluents_set):
 
@@ -704,7 +702,7 @@ class PDDL_Parser:
             if (positive_pre):
                 out.write(fluent)
             else:
-                out.write('not('+ fluent + ')')
+                out.write('-'+ fluent + '')
             if (count < len(preconditions)-1) or (positive_pre and len(action.negative_preconditions) > 0):
                 out.write(', ')
                 count +=1
@@ -731,7 +729,7 @@ class PDDL_Parser:
             for i in action.del_effects:
                 out.write(action.name + act_type)
                 fluent = self.unify_fluent(i[0])
-                out.write('not('+ fluent + ')')
+                out.write('-'+ fluent + '')
 
                 self.print_conditions(i[1],i[2],out)
 
@@ -820,7 +818,7 @@ class PDDL_Parser:
             for condition in conditions:
                 cond = self.unify_fluent(condition)
                 if not isPos:
-                    out.write('!')
+                    out.write('-')
                 out.write(cond)
                 if count_cond < len(conditions)-1:
                     out.write(', ')
@@ -844,9 +842,9 @@ if __name__ == '__main__':
     parser.parse_domain(domain)
     parser.parse_problem(problem)
     parser.print_EFP()
-    fluents = set()
     print("\nThe file has been correctly converted.")
-    print("The resulting file is in the \'out\' folder.\n")
+
+    print("The resulting file, called \'" +parser.domain_name+"_"+parser.problem_name+".txt" "\', is in the \'out\' folder.\n")
 #    print('State: ' + str(parser.state))
 #    for act in parser.actions:
 #        print(act)
