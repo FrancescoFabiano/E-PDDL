@@ -141,7 +141,7 @@ class Action:
                 iv += 1
             if to_print == 1:
                 fluent = self.unify_fluent(pred)
-                if 'B(' not in fluent and 'C(' not in fluent:
+                if 'B(' not in fluent and 'C(' not in fluent and '!' not in fluent:
                     fluents.add(fluent)
             g.append(pred)
         return g

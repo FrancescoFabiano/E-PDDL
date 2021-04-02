@@ -287,13 +287,20 @@ class PDDL_Parser:
                 elif t == ':agents':
                     self.parse_agents(group, t)
                 elif t == ':init':
-                    self.state = frozenset_of_tuples(group)
+                    init = []
+                #    tmp_group = []
+                #    tmp_group.insert(0, 'and')
+                #    tmp_group.insert(1, group)
+                    group.insert(0,'and')
+                    self.split_predicates(group, init, [], '', 'init')
+                    self.state = init
                 elif t == ':goal':
                     positive_goals = []
                     negative_goals = []
-                    self.split_predicates(group[0], positive_goals, negative_goals, '', 'goals')
-                    self.positive_goals = frozenset_of_tuples(positive_goals)
-                    self.negative_goals = frozenset_of_tuples(negative_goals)
+                    group.insert(0,'and')
+                    self.split_predicates(group, positive_goals, negative_goals, '', 'goals')
+                    self.positive_goals = positive_goals
+                    self.negative_goals = negative_goals
                 else: self.parse_problem_extended(t, group)
         else:
             raise Exception('File ' + problem_filename + ' does not match problem pattern')
@@ -313,6 +320,23 @@ class PDDL_Parser:
         else:
             group = [group]
         for predicate in group:
+            if 'B(' in predicate[0] or 'C(' in predicate[0]:
+                if type(predicate[1]) is list:
+                    if predicate[1][0] == 'not':
+                        if len(predicate[1][1]) > 0:
+                            i = 0
+                            tmp_predicate=[]
+                            tmp_predicate.insert(0,predicate[0])
+                            while i < len(predicate[1][1]):
+                                if (i == 0):
+                                    tmp_predicate.insert(i+1,'!'+predicate[1][1][0])
+                                else:
+                                    tmp_predicate.insert(i+1,predicate[1][1][i])
+                                i = i+1
+                            predicate = tmp_predicate
+                        else:
+                            raise Exception('Expected predicate after a \'not\'')
+
             if predicate[0] == 'not':
                 if len(predicate) != 2:
                     raise Exception('Unexpected not in ' + name + part)
@@ -459,7 +483,6 @@ class PDDL_Parser:
                     act_name += '_'+parameter
                 act.name = act_name
                 ground_actions.append(act)
-
         #########FLuents
         self.generate_fluents_EFP(fluents)
         if '' in fluents:
@@ -526,7 +549,7 @@ class PDDL_Parser:
             else:
                 out.write(ini_fs)
                 true_fluents.add(ini_fs)
-                if (index+1 < len(temp_ini) and (not ('B(' in temp_ini[index+1]  and 'C(' in self.state[index+1]))):
+                if ( (index+1 < len(temp_ini)) and ('B(' not in temp_ini[index+1][0]  and 'C(' not in temp_ini[index+1][0])):
                     out.write(', ')
         out.write(';\n')
         neg_fluents = fluents - true_fluents
@@ -551,14 +574,14 @@ class PDDL_Parser:
             out.write('initially ')
             out.write(ini_bf)
             if (ini_count != len(belief_ini)-1):
-                out.write(', ')
+                out.write(';\n')
                 ini_count+=1
         out.write(';\n')
         out.write('\n')
         out.write('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n\n')
 
         out.write('%%%%%%%%%%%%%%%%%%%%%%%%%%    GOALS   %%%%%%%%%%%%%%%%%%%%%%%%%%\n')
-        out.write('%The goals of the plan. Each goal is presented seperately to ease the reading\n\n')
+        out.write('%The goals of the plan. Each goal is presented separately to ease the reading\n\n')
         for goal_f in self.positive_goals:
             out.write('goal ')
             goal_fs = self.unify_fluent(goal_f)
@@ -568,6 +591,8 @@ class PDDL_Parser:
             out.write('goal ')
             goal_fs = self.unify_fluent(goal_f)
             out.write(goal_fs + ';\n')
+
+        out.write('\n')
         out.write('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n')
         out.close()
 
@@ -576,13 +601,18 @@ class PDDL_Parser:
         l = 0
         parCount = 0
         for i in list:
-                fluent += (str(i))
-                if 'B(' in i or 'C(' in i:
-                    parCount +=1
-                    l +=1
-                elif l != len(list) -1:
-                    fluent += '_'
-                    l +=1
+            if 'C(' in i:
+                i = i.replace('C(','C([')
+                i = i[:-1]
+                i = i + '],'
+
+            fluent += (str(i))
+            if 'B(' in i or  'C(' in i:
+                parCount +=1
+                l +=1
+            elif l != len(list) -1:
+                fluent += '_'
+                l +=1
         while parCount != 0:
             fluent +=')'
             parCount -=1

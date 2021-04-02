@@ -1,8 +1,0 @@
-(define (problem pb1)
-  (:domain coin_in_the_box)
-  (:agents a b c)
-  (:init (tail) (has_key a) (looking a) ([a b c](has_key a)))
-  ;([a b c](has_key a)) ([a b c](not (has_key b))) ([a b c](not (has_key c))) ([a b c](not (opened))) ([a b c](looking a)) ([a b c](not (looking b))) ([a b c](not (looking c))))
-  ;(:init (tail) (has_key a))
-  (:goal ([a b](tail)))
-)

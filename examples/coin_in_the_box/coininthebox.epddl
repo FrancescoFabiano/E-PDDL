@@ -6,7 +6,7 @@
   (:action open
 	:act_type 	ontic
     :parameters (?ag - agent)
-    :precondition (and ([?ag](has_key ?ag)) (has_key ?ag))
+    :precondition (and ([?ag](has_key ?ag)) ([?ag](not (has_key ?ag))) (has_key ?ag))
     :effect (opened)
 	:observers (and (forall (?ag2) (when (looking ?ag2) (?ag2))) (?ag))
   )
