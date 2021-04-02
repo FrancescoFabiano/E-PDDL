@@ -11,7 +11,9 @@ The planner inherits its basic structure from the parser in: https://github.com/
 ## How to Run
 To run this simple instance simply call the program giving it the name of the domain and of the problem as input.
 The program will generate the input file for EFP 2.0 in the 'out' folder.
-The file will be named following this pattern: "domain_file_name" + "_" + "problem_file_name" + ".txt"
+The file will be named following this pattern: "domain_file_name" + "_" + "problem_file_name" + ".txt".
+
+For example executing: ```python -B EPDDL.py examples/coin_in_the_box/coininthebox.epddl examples/coin_in_the_box/pb1.epddl``` will generate the file 'out/coin_in_the_box_pb1.txt'
 
 #### Bibliography
 Fabiano, F.; Burigana, A.; Dovier, A.; and Pontelli, E. 2020.
