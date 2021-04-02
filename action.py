@@ -152,7 +152,8 @@ class Action:
             body = self.replace([elem[0]], variables, assignment, fluents, to_print)
             positive_head = self.replace(elem[1], variables, assignment, fluents, to_print)
             negative_head = self.replace(elem[2], variables, assignment, fluents, to_print)
-            g.append((body[0],positive_head,negative_head))
+            diff = self.replace(elem[3], variables, assignment, fluents, to_print)
+            g.append((body[0],positive_head,negative_head,diff))
         return g
 
     def unify_fluent(self,list):

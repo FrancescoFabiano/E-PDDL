@@ -8,7 +8,7 @@
     :parameters (?ag - agent)
     :precondition (and ([?ag](has_key ?ag)) ([?ag](not (has_key ?ag))) (has_key ?ag))
     :effect (opened)
-	:observers (and (forall (?ag2) (when (looking ?ag2) (?ag2))) (?ag))
+	:observers (and (forall (diff(?ag2)(?ag)) (when (looking ?ag2) (?ag2))) (?ag))
   )
 
   (:action peek
@@ -17,7 +17,7 @@
     :precondition (and ([?ag](opened)) ([?ag](looking ?ag)) (looking ?ag) (opened))
     :effect (tail)
 	:observers	(?ag)
-	:p_observers (and (forall (?ag2 - agent) (when (looking ?ag2) (?ag2))))
+	:p_observers (and (forall (diff(?ag2)(?ag)) (when (looking ?ag2) (?ag2))))
 	)
   
 
@@ -40,7 +40,7 @@
     :parameters (?ag - agent)
     :precondition (and ([?ag](tail)) (tail))
     :effect (tail)
-	:observers (and (forall (?ag2 - agent) (when (looking ?ag2) (?ag2))) (?ag))
+	:observers (and (forall (diff(?ag2)(?ag)) (when (looking ?ag2) (?ag2))) (?ag))
    )
 	
 )

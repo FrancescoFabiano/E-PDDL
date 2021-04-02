@@ -243,16 +243,16 @@ class PDDL_Parser:
                 self.split_predicates(group.pop(0), positive_preconditions, negative_preconditions, name, ' preconditions')
             elif t == ':effect':
                 #self.split_effects(group.pop(0), add_effects, del_effects, name, ' effects')
-                self.recoursive_reading(group.pop(0), [['']], [['']], 0, add_effects, del_effects, name, ' effects')
+                self.recoursive_reading(group.pop(0), [['']], [['']], [['']], 0, add_effects, del_effects, name, ' effects')
 
             #    print(str([list(i) for i in add_effects]))
             #    print(str([list(i) for i in del_effects]))
             elif t == ':observers':
                 #self.read_observer(group.pop(0), f_obs, name, ' agents')
-                self.recoursive_reading(group.pop(0), [['']], [['']], 0, f_obs, [], name, ' agents')
+                self.recoursive_reading(group.pop(0), [['']], [['']], [['']], 0, f_obs, [], name, ' agents')
 
             elif t == ':p_observers':
-                self.recoursive_reading(group.pop(0), [['']], [['']], 0, p_obs, [], name, ' agents')
+                self.recoursive_reading(group.pop(0), [['']], [['']], [['']], 0, p_obs, [], name, ' agents')
             else: extensions = self.parse_action_extended(t, group)
         self.actions.append(Action(name, act_type, parameters, positive_preconditions, negative_preconditions, add_effects, del_effects, f_obs, p_obs, extensions))
 
@@ -344,7 +344,7 @@ class PDDL_Parser:
             else:
                 positive.append(predicate)
 
-    def recoursive_reading(self, body, head_positive, head_negative, subProcedure, positive, negative, name, part):
+    def recoursive_reading(self, body, head_positive, head_negative, diff, subProcedure, positive, negative, name, part):
         if not type(body) is list:
             raise Exception('Error with ' + name + part)
 
@@ -353,7 +353,7 @@ class PDDL_Parser:
             and_count = 0
             total_body = []
             while and_count < len(body):
-                total_body.append(self.recoursive_reading(body[and_count], head_positive, head_negative, subProcedure, positive, negative, name, part))
+                total_body.append(self.recoursive_reading(body[and_count], head_positive, head_negative, diff, subProcedure, positive, negative, name, part))
                 and_count = and_count + 1
 
             #print("Total body: " + str(total_body))
@@ -377,7 +377,7 @@ class PDDL_Parser:
             if (condition[0] == 'when' or condition[0] == 'forall'):
                 raise Exception('Error with ' + name + part + ' you cannot embed other keywords, other than \'and\', in the \'when\' condition')
             elif condition[0] == 'and':
-                condition = self.recoursive_reading(condition, [['']], [['']], 1, positive, negative, name, part)
+                condition = self.recoursive_reading(condition, [['']], [['']], [['']], 1, positive, negative, name, part)
                 pos_condition = condition[0]
                 neg_condition = condition[1]
 
@@ -395,7 +395,7 @@ class PDDL_Parser:
             if (rule[0] == 'when' or rule[0] == 'forall'):
                 raise Exception('Error with ' + name + part + ' you cannot embed other keywords, other than \'and\', in the \'when\' body')
 
-            self.recoursive_reading(rule,pos_condition,neg_condition,subProcedure, positive, negative, name, part)
+            self.recoursive_reading(rule,pos_condition,neg_condition, diff, subProcedure, positive, negative, name, part)
             return(rule,pos_condition,neg_condition)
 
         elif body[0] == 'forall':
@@ -406,6 +406,15 @@ class PDDL_Parser:
                 head = body[0]
                 body.pop(0)
                 #if type(condition) is list:
+                #make sense inside forall
+                if head[0] == 'diff':
+                    head.pop(0)
+                    if len(head) != 2:
+                        raise Exception('Bad \'diff\' construction')
+                    else:
+                        diff = [head[1]]
+                        head = head[0]
+
                 if (head[0] == 'when' or head[0] == 'forall' or head[0] == 'and' or head[0] == 'not'):
                     raise Exception('Error with ' + name + part + ' you cannot embed other keywords in the \'forall\' condition')
                 else:
@@ -418,7 +427,7 @@ class PDDL_Parser:
                             if v in rule:
                                 rule[rule.index(v)] =  fa_start + rule[rule.index(v)] + fa_stop
                             elif rule[0] == 'when':
-                                parsed_rule = self.recoursive_reading(rule,[['']], [['']], 1, positive, negative, name, part)
+                                parsed_rule = self.recoursive_reading(rule,[['']], [['']],[['']], 1, positive, negative, name, part)
 
                                 i = 0
                                 while i < 3:
@@ -434,21 +443,20 @@ class PDDL_Parser:
                                     i = i+1
                             else:
                                 raise Exception('To many nested command in the agents\' observability')
-                            self.recoursive_reading(parsed_rule[0],parsed_rule[1],parsed_rule[2],subProcedure, positive, negative, name, part)
+                            self.recoursive_reading(parsed_rule[0],parsed_rule[1],parsed_rule[2], diff, subProcedure, positive, negative, name, part)
+
 
         elif body[0] == 'not':
             if len(body) != 2:
                 raise Exception('Unexpected not in ' + name + part)
             if subProcedure == 0:
-                negative.append((body[-1], head_positive, head_negative))
+                negative.append((body[-1], head_positive, head_negative,diff))
             return (body[-1], 1)
 
         else:
             if subProcedure == 0:
-                positive.append((body, head_positive, head_negative))
+                positive.append((body, head_positive, head_negative,diff))
             return (body, 0)
-
-
 
     def assign_act_type(self, name):
         name = name.lower()
@@ -742,15 +750,20 @@ class PDDL_Parser:
                 for ag in ags[0]:
                     if 'FASTART' in ag:
                         for agent in self.objects['agent']:
-                            tmp_cond = [[]]
-                            self.copy_cond_list(ags,tmp_cond)
+                            notPrint = 0
+                            if ags[3][0][0] != '':
+                                if agent == ags[3][0][0]:
+                                    notPrint = 1
+                            if notPrint == 0:
+                                tmp_cond = [[]]
+                                self.copy_cond_list(ags,tmp_cond)
 
-                            out.write(agent + obs_type + action.name)
-                            self.substitute_ag(tmp_cond[1],agent)
-                            self.substitute_ag(tmp_cond[2],agent)
+                                out.write(agent + obs_type + action.name)
+                                self.substitute_ag(tmp_cond[1],agent)
+                                self.substitute_ag(tmp_cond[2],agent)
 
-                            self.print_conditions(tmp_cond[1],tmp_cond[2],out)
-                            out.write(';\n')
+                                self.print_conditions(tmp_cond[1],tmp_cond[2],out)
+                                out.write(';\n')
                     else:
                         out.write(str(ag) + obs_type + action.name)
                         self.print_conditions(ags[1],ags[2],out)
