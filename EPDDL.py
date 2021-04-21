@@ -471,7 +471,7 @@ class PDDL_Parser:
     #-----------------------------------------------
     def print_EFP(self):
         #########File NAME
-        output_folder = "out"
+        output_folder = "out/efp"
         Path(output_folder).mkdir(exist_ok=True)
 
 
@@ -568,7 +568,7 @@ class PDDL_Parser:
         belief_ini= set()
         temp_ini = list(self.state)
         for index, ini_f in enumerate(temp_ini):
-            ini_fs = self.unify_fluent(ini_f)
+            ini_fs = self.unify_fluent_EFP(ini_f)
             if 'B(' in ini_fs or 'C(' in ini_fs:
                 belief_ini.add(ini_fs)
             else:
@@ -609,35 +609,35 @@ class PDDL_Parser:
         out.write('%The goals of the plan. Each goal is presented separately to ease the reading\n\n')
         for goal_f in self.positive_goals:
             out.write('goal ')
-            goal_fs = self.unify_fluent(goal_f)
+            goal_fs = self.unify_fluent_EFP(goal_f)
             out.write(goal_fs + ';\n')
 
         for goal_f in self.negative_goals:
             out.write('goal ')
-            goal_fs = self.unify_fluent(goal_f)
+            goal_fs = self.unify_fluent_EFP(goal_f)
             out.write(goal_fs + ';\n')
 
         out.write('\n')
         out.write('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n')
         out.close()
 
-    def unify_fluent(self,given_list):
-        return Action.unify_fluent(given_list)
+    def unify_fluent_EFP(self,given_list):
+        return Action.unify_fluent_EFP(given_list)
 
     def generate_fluents_EFP(self, fluents_set):
 
         for ini_f in self.state:
-            fluent = self.unify_fluent(ini_f)
+            fluent = self.unify_fluent_EFP(ini_f)
             if 'B(' not in fluent and 'C(' not in fluent:
                 fluents_set.add(fluent)
 
         for goal_f in self.positive_goals:
-            fluent = self.unify_fluent(goal_f)
+            fluent = self.unify_fluent_EFP(goal_f)
             if 'B(' not in fluent and 'C(' not in fluent:
                 fluents_set.add(fluent)
 
         for goal_f in self.negative_goals:
-            fluent = self.unify_fluent(goal_f)
+            fluent = self.unify_fluent_EFP(goal_f)
             if 'B(' not in fluent and 'C(' not in fluent:
                 fluents_set.add(fluent)
 
@@ -677,7 +677,7 @@ class PDDL_Parser:
                         while v in pred:
                             pred[pred.index(v)] = assignment[iv]
                         iv += 1
-                    fluent = self.unify_fluent(pred)
+                    fluent = self.unify_fluent_EFP(pred)
                     if 'B(' not in fluent and 'C(' not in fluent:
                         fluents_set.add(fluent)
 
@@ -698,7 +698,7 @@ class PDDL_Parser:
             preconditions = action.negative_preconditions
         count = 0
         for i in preconditions:
-            fluent = self.unify_fluent(i)
+            fluent = self.unify_fluent_EFP(i)
             if (positive_pre):
                 out.write(fluent)
             else:
@@ -718,20 +718,20 @@ class PDDL_Parser:
         if (len(action.add_effects) > 0):
             for i in action.add_effects:
                 out.write(action.name + act_type)
-                fluent = self.unify_fluent(i[0])
+                fluent = self.unify_fluent_EFP(i[0])
                 out.write(fluent)
 
-                self.print_conditions(i[1],i[2],out)
+                self.print_conditions_EFP(i[1],i[2],out)
 
                 out.write(';\n')
 
         if (len(action.del_effects) > 0):
             for i in action.del_effects:
                 out.write(action.name + act_type)
-                fluent = self.unify_fluent(i[0])
+                fluent = self.unify_fluent_EFP(i[0])
                 out.write('-'+ fluent + '')
 
-                self.print_conditions(i[1],i[2],out)
+                self.print_conditions_EFP(i[1],i[2],out)
 
                 out.write(';\n')
 
@@ -760,11 +760,11 @@ class PDDL_Parser:
                                 self.substitute_ag(tmp_cond[1],agent)
                                 self.substitute_ag(tmp_cond[2],agent)
 
-                                self.print_conditions(tmp_cond[1],tmp_cond[2],out)
+                                self.print_conditions_EFP(tmp_cond[1],tmp_cond[2],out)
                                 out.write(';\n')
                     else:
                         out.write(str(ag) + obs_type + action.name)
-                        self.print_conditions(ags[1],ags[2],out)
+                        self.print_conditions_EFP(ags[1],ags[2],out)
                         out.write(';\n')
 
     def copy_cond_list(self, agents, temp):
@@ -792,13 +792,13 @@ class PDDL_Parser:
                 if 'FASTART' in elem:
                     conds[conds.index(cond)][cond.index(elem)] = re.sub(r'(FASTART\S+FASTOP)', agent ,elem)
 
-    def print_conditions(self,pos_cond,neg_cond,out):
+    def print_conditions_EFP(self,pos_cond,neg_cond,out):
         yet_to_print = 1
-        if self.subprint_cond(pos_cond,1,out, yet_to_print) == 1:
+        if self.subprint_cond_EFP(pos_cond,1,out, yet_to_print) == 1:
             yet_to_print = 0;
-        self.subprint_cond(neg_cond,0,out, yet_to_print);
+        self.subprint_cond_EFP(neg_cond,0,out, yet_to_print);
 
-    def subprint_cond(self,conditions,isPos,out, yet_to_print):
+    def subprint_cond_EFP(self,conditions,isPos,out, yet_to_print):
         printed = 0
         for condition in conditions:
             if '' in condition:
@@ -816,7 +816,7 @@ class PDDL_Parser:
             else:
                 out.write(', ')
             for condition in conditions:
-                cond = self.unify_fluent(condition)
+                cond = self.unify_fluent_EFP(condition)
                 if not isPos:
                     out.write('-')
                 out.write(cond)
@@ -825,6 +825,123 @@ class PDDL_Parser:
                     count_cond = count_cond +1
 
         return printed
+
+    #-----------------------------------------------
+    # Print PDKB
+    #-----------------------------------------------
+    def print_PDKB(self):
+        #########File NAME
+        output_folder = "out/pdkb"
+        Path(output_folder).mkdir(exist_ok=True)
+        self.print_domain_pdkb(self.domain_name, output_folder)
+        self.print_problem_pdkb(self.problem_name, output_folder)
+
+
+    def print_domain_pdkb(self, domain_name, output_folder):
+        out = open(output_folder + "/" + domain_name+".pdkbpddl", "w")
+        out.write("%This file is automatically generated from an E-PDDL specification and follows the PDKB-PDDL syntax.\n\n")
+
+        out.write('%%%%%%%%%%%%%%%%%    ACTIONS\' SPECIFICATIONS    %%%%%%%%%%%%%%%%\n\n')
+
+        for action in parser.actions:
+            out.write('%%%Action ' + action.name + '\n\n')
+            out.write('\t(action: ' + action.name + '\n')
+            self.print_precondition_PDKB(action, out)
+            self.print_effects_PDKB(action, out)
+            #self.print_observers_EFP(action, 1, out)
+            #self.print_observers_EFP(action, 0, out)
+            out.write('\t)\n%%%\n\n')
+        out.write('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n\n')
+
+    def print_problem_pdkb(self, problem_name, output_folder):
+        out = open(output_folder + "/" + problem_name+".pdkbpddl", "w")
+        out.write("%This file is automatically generated from an E-PDDL specification and follows the PDKB-PDDL syntax.\n\n")
+
+    def print_precondition_PDKB(self,action,out):
+        #if (len(action.positive_preconditions)+len(action.negative_preconditions) > 0):
+            out.write('\t\t:precondition (and' )
+            #+ str([list(i) for i in action.positive_preconditions]) +  str([list(i) for i in action.negative_preconditions]))
+            self.subprint_precondition_PDKB(action, 1, out)
+            self.subprint_precondition_PDKB(action, 0, out)
+            out.write(')\n')
+
+    def subprint_precondition_PDKB(self,action,is_postive,out):
+        positive_pre = True
+        if (is_postive == 1):
+            preconditions = action.positive_preconditions
+        else:
+            positive_pre = False
+            preconditions = action.negative_preconditions
+        for i in preconditions:
+            fluent = self.unify_fluent_PDKB(i)
+            if (positive_pre):
+                out.write(' ('+ fluent + ')')
+            else:
+                out.write(' (!'+ fluent + ')')
+
+    def print_effects_PDKB(self,action,out):
+        out.write('\t\t:effects (and' )
+        is_ontic = True;
+        if (action.act_type == 'sensing' or action.act_type == 'announcement'):
+            is_ontic = 'False'
+
+
+        if (len(action.add_effects) > 0):
+            for i in action.add_effects:
+                self.print_conditions_PDKB(i[1],i[2],out)
+                fluent = self.unify_fluent_PDKB(i[0])
+                out.write(' ('+ fluent + ')')
+                #out.write(';\n')
+
+        if (len(action.del_effects) > 0):
+            for i in action.del_effects:
+                self.print_conditions_PDKB(i[1],i[2],out)
+                fluent = self.unify_fluent_PDKB(i[0])
+                out.write(' (!'+ fluent + ')')
+
+                #self.print_conditions_EFP(i[1],i[2],out)
+
+            #    out.write(';\n')
+
+        out.write(')\n')
+
+    def print_conditions_PDKB(self,pos_cond,neg_cond,out):
+        yet_to_print = 1
+        if self.subprint_cond_PDKB(pos_cond,1,out, yet_to_print) == 1:
+            yet_to_print = 0;
+        self.subprint_cond_PDKB(neg_cond,0,out, yet_to_print);
+
+    def subprint_cond_PDKB(self,conditions,isPos,out, yet_to_print):
+        printed = 0
+        for condition in conditions:
+            if '' in condition:
+                condition.remove('')
+
+        for condition in conditions:
+            if not condition:
+                conditions.remove(condition)
+
+        if conditions:
+            count_cond = 0
+            if (yet_to_print == 1):
+                out.write( ' when( and ( ' )
+                printed = 1
+            else:
+                out.write(' ( ')
+            for condition in conditions:
+                cond = self.unify_fluent_EFP(condition)
+                if not isPos:
+                    out.write('!')
+                out.write(cond)
+                if count_cond < len(conditions)-1:
+                    out.write(') ')
+                    count_cond = count_cond +1
+
+        return printed
+
+    def unify_fluent_PDKB(self,given_list):
+        return Action.unify_fluent_PDKB(given_list)
+
 
 #-----------------------------------------------
 # Main
@@ -842,9 +959,12 @@ if __name__ == '__main__':
     parser.parse_domain(domain)
     parser.parse_problem(problem)
     parser.print_EFP()
-    print("\nThe file has been correctly converted.")
+    print("\nThe files have been correctly converted to mAp.")
+    print("The resulting file, called \'" +parser.domain_name+"_"+parser.problem_name+".txt\', is in the \'out\efp\' folder.\n")
 
-    print("The resulting file, called \'" +parser.domain_name+"_"+parser.problem_name+".txt" "\', is in the \'out\' folder.\n")
+    parser.print_PDKB()
+    print("\nThe files have been correctly converted to PDKB-PDDL.")
+    print("The resulting files, called \'" +parser.domain_name+".pdkpddl\' and \'" +parser.problem_name+".pdkpddl\', are in the \'out\pdkb\' folder.\n")
 #    print('State: ' + str(parser.state))
 #    for act in parser.actions:
 #        print(act)

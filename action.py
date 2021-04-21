@@ -10,7 +10,7 @@ class Action:
     # Initialize
     #-----------------------------------------------
 
-    def __init__(self, act_type, name, parameters, positive_preconditions, negative_preconditions, add_effects, del_effects, observers, p_observers, extensions = None):
+    def __init__(self,  name, act_type, parameters, positive_preconditions, negative_preconditions, add_effects, del_effects, observers, p_observers, extensions = None):
         def frozenset_of_tuples(data):
             return frozenset([tuple(t) for t in data])
         self.name = name
@@ -147,7 +147,7 @@ class Action:
                     pred[pred.index(v)] = assignment[iv]
                 iv += 1
             if to_print == 1:
-                fluent = Action.unify_fluent(pred)
+                fluent = Action.unify_fluent_EFP(pred)
                 if 'B(' not in fluent and 'C(' not in fluent and '-' not in fluent:
                     fluents.add(fluent)
             g.append(pred)
@@ -164,7 +164,7 @@ class Action:
         return g
 
     @staticmethod
-    def unify_fluent(given_list):
+    def unify_fluent_EFP(given_list):
         fluent = ''
         l = 0
         parCount = 0
@@ -181,7 +181,7 @@ class Action:
                 fluent += i
 
                 if type(given_list[l]) is list:
-                    fluent += Action.unify_fluent(given_list[l])
+                    fluent += Action.unify_fluent_EFP(given_list[l])
                     l += len(given_list[l])
                 #fluent += (str(i))
 
@@ -194,6 +194,47 @@ class Action:
         while parCount != 0:
             fluent +=')'
             parCount -=1
+        return fluent
+
+    @staticmethod
+    def unify_fluent_PDKB(given_list):
+        fluent = ''
+        l = 0
+        parCount = 0
+        while l < len(given_list):
+            i = given_list[l]
+            if '-' in i:
+                i = i.replace('-','!')
+
+            if 'C(' in i:
+                parCount +=1
+                i = i.replace('C(','[')
+                i = i[:-1]
+                l += 1
+                fluent += i + ']('
+
+            if 'B(' in i:
+                parCount +=1
+                i = i.replace('B(','[')
+                i = i[:-1]
+                l += 1
+                fluent += i + ']('
+
+                if type(given_list[l]) is list:
+                    fluent += Action.unify_fluent_PDKB(given_list[l])
+                    l += len(given_list[l])
+                #fluent += (str(i))
+
+            else:
+                fluent += (str(i))
+                if l != len(given_list) -1:
+                    fluent += ' '
+                l +=1
+
+        while parCount != 0:
+            fluent +=')'
+            parCount -=1
+
         return fluent
 
 #-----------------------------------------------
