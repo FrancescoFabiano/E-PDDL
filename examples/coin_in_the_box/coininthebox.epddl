@@ -15,7 +15,7 @@
 	:act_type	sensing
     :parameters (?ag - agent)
     :precondition (and ([?ag](opened)) ([?ag](looking ?ag)) (looking ?ag) (opened))
-    :effect (tail)
+    :effect (when (looking ?ag) (tail))
 	:observers	(?ag)
 	:p_observers (and (forall (diff(?ag2)(?ag)) (when (looking ?ag2) (?ag2))))
 	)
@@ -34,6 +34,7 @@
     :effect (not (looking ?ag2))
 	:observers (?ag1 ?ag2)
   )
+  
   
   (:action shout
 	:act_type	announcement
