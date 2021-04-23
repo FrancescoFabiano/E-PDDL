@@ -1,5 +1,7 @@
 (define (problem pb1)
   (:domain dwr)
+  (:agents ag1 ag2)
+
   (:objects
     r1 - robot
     l1 l2 - location
