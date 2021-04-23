@@ -218,6 +218,8 @@ class PDDL_Parser:
         del_effects = []
         f_obs = []
         p_obs = []
+        derive_cond = []
+        explicit_eff = []
         extensions = None
         while group:
             t = group.pop(0)
@@ -255,8 +257,12 @@ class PDDL_Parser:
 
             elif t == ':p_observers':
                 self.recoursive_reading(group.pop(0), [['']], [['']], [['']], 0, p_obs, [], name, ' agents')
+            elif t == ":derive":
+                derive_cond = group.pop(0)
+            elif t == ":exp_effect":
+                explicit_eff = group.pop(0)
             else: extensions = self.parse_action_extended(t, group)
-        self.actions.append(Action(name, act_type, parameters, positive_preconditions, negative_preconditions, add_effects, del_effects, f_obs, p_obs, extensions))
+        self.actions.append(Action(name, act_type, parameters, positive_preconditions, negative_preconditions, add_effects, del_effects, f_obs, p_obs, derive_cond, explicit_eff, extensions))
 
     def parse_action_extended(self, t, group):
         print(str(t) + ' is not recognized in action')
@@ -848,9 +854,11 @@ class PDDL_Parser:
             out.write('%%%Action ' + action.name + '\n\n')
             out.write('\t(action: ' + action.name + '\n')
             self.print_parameters_PDKB(action, out)
-            self.print_derive_condition_PDKB(action, out)
+            if not self.print_expl_derive_condition_PDKB(action,out):
+                self.print_derive_condition_PDKB(action, out)
             self.print_precondition_PDKB(action, out)
-            self.print_effects_PDKB(action, out)
+            if not self.print_expl_effects_PDKB(action,out):
+                self.print_effects_PDKB(action, out)
 
             #self.print_observers_EFP(action, 0, out)
             out.write('\t)\n%%%\n\n')
@@ -870,6 +878,14 @@ class PDDL_Parser:
                 out.write(' ')
         out.write(')\n')
 
+    def print_expl_derive_condition_PDKB(self,action,out):
+        if (len(action.derive_cond) > 0):
+            out.write('\t\t:derive\t\t\t (')
+            out.write(self.unify_fluent_PDKB(action.derive_cond, True))
+            out.write(')\n')
+            return True
+
+        return False
 
     def print_derive_condition_PDKB(self,action,out):
         out.write('\t\t:derive\t\t\t (')
@@ -912,7 +928,6 @@ class PDDL_Parser:
             if visited == False:
                 out.write('never)\n')
 
-
     def print_precondition_PDKB(self,action,out):
         #if (len(action.positive_preconditions)+len(action.negative_preconditions) > 0):
             out.write('\t\t:precondition\t (and' )
@@ -935,6 +950,15 @@ class PDDL_Parser:
             else:
                 out.write(' (!'+ fluent + ')')
 
+    def print_expl_effects_PDKB(self,action,out):
+        if (len(action.explicit_eff) > 0):
+            out.write('\t\t:effects\t\t (')
+            out.write(self.unify_fluent_PDKB(action.explicit_eff, True))
+            out.write(')\n')
+            return True
+
+        return False
+
     def print_effects_PDKB(self,action,out):
         out.write('\t\t:effects\t\t (and' )
         is_ontic = True;
@@ -945,7 +969,6 @@ class PDDL_Parser:
         self.subprint_effects_PDKB(action, out, is_ontic, printed, True)
         self.subprint_effects_PDKB(action, out, is_ontic, printed, False)
         out.write(')\n')
-
 
     def subprint_effects_PDKB(self,action,out,is_ontic,printed, is_pos):
         count = 0
@@ -994,11 +1017,6 @@ class PDDL_Parser:
                     raise Exception('Each action needs at leat one fully observant agent.')
                 if printed == True:
                     out.write(')')
-                #out.write(';\n')
-
-
-
-
 
     def print_conditions_PDKB(self,pos_cond,neg_cond,out):
         yet_to_print = 1
@@ -1036,8 +1054,8 @@ class PDDL_Parser:
                     count_cond = count_cond +1
         return printed
 
-    def unify_fluent_PDKB(self,given_list):
-        return Action.unify_fluent_PDKB(given_list)
+    def unify_fluent_PDKB(self,given_list, no_change = False):
+        return Action.unify_fluent_PDKB(given_list, no_change)
 
 
 #-----------------------------------------------

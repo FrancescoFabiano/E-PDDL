@@ -18,6 +18,7 @@
     :effect (when (looking ?ag) (tail))
 	:observers	(?ag)
 	:p_observers (and (forall (diff(?ag2)(?ag)) (when (looking ?ag2) (?ag2))))
+	:derive	(voglio questo [?ag](e quello - in derive))
 	)
   
 

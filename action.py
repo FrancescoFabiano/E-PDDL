@@ -10,7 +10,7 @@ class Action:
     # Initialize
     #-----------------------------------------------
 
-    def __init__(self,  name, act_type, parameters, positive_preconditions, negative_preconditions, add_effects, del_effects, observers, p_observers, extensions = None):
+    def __init__(self,  name, act_type, parameters, positive_preconditions, negative_preconditions, add_effects, del_effects, observers, p_observers, derive_cond = [], explicit_eff = [], extensions = None):
         def frozenset_of_tuples(data):
             return frozenset([tuple(t) for t in data])
         self.name = name
@@ -22,7 +22,8 @@ class Action:
         self.del_effects = del_effects
         self.observers = observers
         self.p_observers = p_observers
-
+        self.derive_cond = derive_cond
+        self.explicit_eff = explicit_eff
 
     #-----------------------------------------------
     # to String
@@ -197,13 +198,13 @@ class Action:
         return fluent
 
     @staticmethod
-    def unify_fluent_PDKB(given_list):
+    def unify_fluent_PDKB(given_list, no_change):
         fluent = ''
         l = 0
         parCount = 0
         while l < len(given_list):
             i = given_list[l]
-            if '-' in i:
+            if '-' in i and no_change == False:
                 i = i.replace('-','!')
 
             if 'C(' in i:
