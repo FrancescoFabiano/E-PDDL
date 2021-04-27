@@ -214,7 +214,11 @@ class Action:
                 l += 1
                 fluent += i + ']('
 
-            if 'B(' in i:
+                if type(given_list[l]) is list:
+                    fluent += Action.unify_fluent_PDKB(given_list[l])
+                    l += len(given_list[l])
+
+            elif 'B(' in i:
                 parCount +=1
                 i = i.replace('B(','[')
                 i = i[:-1]
