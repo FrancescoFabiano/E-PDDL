@@ -1,4 +1,4 @@
-(define (domain coin_in_the_box)
+(define (domain coininthebox)
   (:requirements :strips :negative-preconditions :no-duplicates :mep)
   (:predicates (opened) (has_key ?ag - agent) (looking ?ag - agent) (tail))
  
@@ -18,7 +18,7 @@
     :effect (when (looking ?ag) (tail))
 	:observers	(?ag)
 	:p_observers (and (forall (diff(?ag2)(?ag)) (when (looking ?ag2) (?ag2))))
-	:derive	(voglio questo [?ag](e quello - in derive))
+	:derive	(never)
 	)
   
 
