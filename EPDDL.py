@@ -933,9 +933,15 @@ class PDDL_Parser:
         #init print
         out.write('\n\t(:init-type complete)')
         out.write('\n\t(:init')
-        for ini_f in self.state:
-            ini_fs = self.unify_fluent_init_PDKB(ini_f)
-            out.write('\n\n' + ini_fs)
+        t_depth = 1
+        while (t_depth <= int(self.depth)):
+            out.write("\n\n\t\t;Depth " + str(t_depth))
+            for ini_f in self.state:
+                ini_fs = self.unify_fluent_init_PDKB(ini_f,t_depth)
+                if ini_fs != '':
+                    out.write('\n\n' + ini_fs)
+            t_depth+=1
+
 
         out.write('\n\t)')
         out.write('\n')
@@ -1147,25 +1153,28 @@ class PDDL_Parser:
                     count_cond = count_cond +1
         return printed
 
-    def unify_fluent_PDKB(self,given_list, no_change = False):
-        return Action.unify_fluent_PDKB(given_list, no_change)
-
-    def unify_fluent_init_PDKB(self,given_list, no_change = False):
+    def unify_fluent_init_PDKB(self,given_list, t_depth, no_change = False):
         ret = ''
         count = 1
         found = False
+        to_reprint = False
+
+        if t_depth == 1:
+            to_reprint = True
+
         new_list = copy.deepcopy(given_list)
         for elem in given_list:
             if 'C(' in elem:
                 if len(self.objects['agent']) == elem.count(','):
+                    to_reprint = True
                     if not found:
                         found = True
                     else:
-                        return ('\t\t('+Action.unify_fluent_PDKB(given_list, no_change)+') ')
+                        return ('\t\t('+ self.unify_fluent_PDKB(given_list)+') ')
 
                     del new_list[new_list.index(elem)]
 
-                    while count <= int(self.depth):
+                    while count <= t_depth:
                         ag_name = '?ag'+str(count)
                         new_list.insert(0,'B('+ag_name+',')
                         t_count = 0
@@ -1175,19 +1184,23 @@ class PDDL_Parser:
                             t_count += 1
                         count += 1
 
-        ret+='\t\t'
-        if not found:
-            ret+= '('
-            count += 1
+        if to_reprint:
+            ret+='\t\t'
+            if not found:
+                ret+= '('
+                count += 1
 
-        ret += Action.unify_fluent_PDKB(new_list, no_change)
+            ret += self.unify_fluent_PDKB(new_list)
 
-        while count > 1:
-            ret += ')'
-            count -= 1
-        #ret+='\n'
+            while count > 1:
+                ret += ')'
+                count -= 1
+            #ret+='\n'
 
         return ret
+
+    def unify_fluent_PDKB(self,given_list, no_change = False):
+        return Action.unify_fluent_PDKB(given_list, no_change, False)
 
 
 #-----------------------------------------------

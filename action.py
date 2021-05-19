@@ -198,7 +198,7 @@ class Action:
         return fluent
 
     @staticmethod
-    def unify_fluent_PDKB(given_list, no_change):
+    def unify_fluent_PDKB(given_list, no_change, from_bf):
         fluent = ''
         l = 0
         parCount = 0
@@ -208,29 +208,33 @@ class Action:
                 i = i.replace('-','!')
 
             if 'C(' in i:
-                parCount +=1
+                from_bf = True
                 i = i.replace('C(','[')
                 i = i[:-1]
                 l += 1
-                fluent += i + ']('
+                fluent += i + ']'
 
                 if type(given_list[l]) is list:
-                    fluent += Action.unify_fluent_PDKB(given_list[l])
+                    fluent += Action.unify_fluent_PDKB(given_list[l], no_change,from_bf)
                     l += len(given_list[l])
 
             elif 'B(' in i:
-                parCount +=1
+                from_bf = True
                 i = i.replace('B(','[')
                 i = i[:-1]
                 l += 1
-                fluent += i + ']('
+                fluent += i + ']'
 
                 if type(given_list[l]) is list:
-                    fluent += Action.unify_fluent_PDKB(given_list[l])
+                    fluent += Action.unify_fluent_PDKB(given_list[l], no_change,from_bf)
                     l += len(given_list[l])
                 #fluent += (str(i))
 
             else:
+                if from_bf:
+                    fluent += '('
+                    parCount += 1
+                    from_bf= False
                 fluent += (str(i))
                 if l != len(given_list) -1:
                     fluent += ' '
