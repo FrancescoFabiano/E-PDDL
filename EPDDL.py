@@ -11,7 +11,7 @@ from pathlib import Path
 
 from action import Action
 
-class PDDL_Parser:
+class EPDDL_Parser:
 
     SUPPORTED_REQUIREMENTS = [':strips', ':negative-preconditions', ':typing', ':no-duplicates', ':mep']
 
@@ -20,65 +20,68 @@ class PDDL_Parser:
     #-----------------------------------------------
 
     def scan_tokens(self, filename):
-        with open(filename,'r') as f:
-            # Remove single line comments
-            str = re.sub(r';.*$', '', f.read(), flags=re.MULTILINE).lower()
-            str = re.sub(r'\[([^[]+)-agent(\s+|)\]', r'[\1]',str,flags=re.MULTILINE)
+        try:
+            with open(filename,'r') as f:
+                # Remove single line comments
+                str = re.sub(r';.*$', '', f.read(), flags=re.MULTILINE).lower()
+                str = re.sub(r'\[([^[]+)-agent(\s+|)\]', r'[\1]',str,flags=re.MULTILINE)
 
-            nb_rep = 1
+                nb_rep = 1
 
-            while (nb_rep):
-                    (str, nb_rep) = re.subn(r'\((\s|)+\(([^()]+)\)(\s|)+\)', r'\2',str,flags=re.MULTILINE)
+                while (nb_rep):
+                        (str, nb_rep) = re.subn(r'\((\s|)+\(([^()]+)\)(\s|)+\)', r'\2',str,flags=re.MULTILINE)
 
-            nb_rep = 1
+                nb_rep = 1
 
-            while (nb_rep):
-                (str, nb_rep) = re.subn(r'(\[[^[]+\])\(([^(]+)\)', r'\1\2',str,flags=re.MULTILINE)
+                while (nb_rep):
+                    (str, nb_rep) = re.subn(r'(\[[^[]+\])\(([^(]+)\)', r'\1\2',str,flags=re.MULTILINE)
 
-        # Tokenize
-        stack = []
-        list = []
-        isBF = 0
-        insideBF = 0
-        firstAg = 1
-        countSqPa = 0
-        multi_ag = 0
-        Bf_string = ''
-        for t in re.findall(r'[()\[\]]|[^\s()\[\]]+', str):
-            if t == '(':
-                stack.append(list)
-                list = []
-            elif t == ')':
-                if stack:
-                    l = list
-                    list = stack.pop()
-                    list.append(l)
+            # Tokenize
+            stack = []
+            list = []
+            isBF = 0
+            insideBF = 0
+            firstAg = 1
+            countSqPa = 0
+            multi_ag = 0
+            Bf_string = ''
+            for t in re.findall(r'[()\[\]]|[^\s()\[\]]+', str):
+                if t == '(':
+                    stack.append(list)
+                    list = []
+                elif t == ')':
+                    if stack:
+                        l = list
+                        list = stack.pop()
+                        list.append(l)
+                    else:
+                        raise Exception('Missing open parentheses')
+                elif t == '[':
+                    firstAg = 1
+                    insideBF = 1
+                    Bf_string = 'B('
+                elif t == ']':
+                    insideBF = 0
+                    Bf_string += ','
+                    if multi_ag == 1:
+                        Bf_string = Bf_string.replace('B(', 'C(')
+                    list.append(Bf_string)
+                    multi_ag = 0
+                elif insideBF == 1:
+                    if firstAg == 0:
+                        multi_ag = 1
+                        Bf_string +=','
+                    Bf_string +=t
+                    firstAg = 0
                 else:
-                    raise Exception('Missing open parentheses')
-            elif t == '[':
-                firstAg = 1
-                insideBF = 1
-                Bf_string = 'B('
-            elif t == ']':
-                insideBF = 0
-                Bf_string += ','
-                if multi_ag == 1:
-                    Bf_string = Bf_string.replace('B(', 'C(')
-                list.append(Bf_string)
-                multi_ag = 0
-            elif insideBF == 1:
-                if firstAg == 0:
-                    multi_ag = 1
-                    Bf_string +=','
-                Bf_string +=t
-                firstAg = 0
-            else:
-                list.append(t)
-        if stack:
-            raise Exception('Missing close parentheses')
-        if len(list) != 1:
-            raise Exception('Malformed expression')
-        return list[0]
+                    list.append(t)
+            if stack:
+                raise Exception('Missing close parentheses')
+            if len(list) != 1:
+                raise Exception('Malformed expression')
+            return list[0]
+
+        except Exception as e: print(e)
 
     #-----------------------------------------------
     # Parse domain
@@ -658,7 +661,8 @@ class PDDL_Parser:
             if 'B(' not in fluent and 'C(' not in fluent:
                 fluents_set.add(fluent)
 
-        duplicates = True
+        #duplicates = True
+        duplicates = False
         if ':no-duplicates' in self.requirements:
             duplicates = False
         for predicate in self.predicates.items():
@@ -706,6 +710,15 @@ class PDDL_Parser:
             self.subprint_precondition_EFP(action, 0, out)
             out.write(';\n')
 
+    def reorder_bf_list(self, list):
+        ret = []
+        for elem in list:
+            if 'B(' in elem[0]:
+                ret.insert(0,elem)
+            else:
+                ret.append(elem)
+        return ret
+
     def subprint_precondition_EFP(self,action,is_postive,out):
         positive_pre = True
         if (is_postive == 1):
@@ -714,6 +727,7 @@ class PDDL_Parser:
             positive_pre = False
             preconditions = action.negative_preconditions
         count = 0
+        preconditions = self.reorder_bf_list(preconditions)
         for i in preconditions:
             fluent = self.unify_fluent_EFP(i)
             if (positive_pre):
@@ -830,6 +844,7 @@ class PDDL_Parser:
                 printed = 1
             else:
                 out.write(', ')
+            conditions = self.reorder_bf_list(conditions)
             for condition in conditions:
                 cond = self.unify_fluent_EFP(condition)
                 if not isPos:
@@ -1210,7 +1225,7 @@ if __name__ == '__main__':
     import sys, pprint
     domain = sys.argv[1]
     problem = sys.argv[2]
-    parser = PDDL_Parser()
+    parser = EPDDL_Parser()
 #    print('----------------------------')
 #    pprint.pprint(parser.scan_tokens(domain))
 #    print('----------------------------')
@@ -1219,11 +1234,11 @@ if __name__ == '__main__':
     parser.parse_domain(domain)
     parser.parse_problem(problem)
     parser.print_EFP()
-    print("\nThe files have been correctly converted to mAp.")
+    print("\nThe given files have been correctly converted to mAp.")
     print("The resulting file, called \'" +parser.domain_name+"_"+parser.problem_name+".txt\', is in the \'out\efp\' folder.\n")
 
     parser.print_PDKB()
-    print("\nThe files have been correctly converted to PDKB-PDDL.")
+    print("\nThe given files have been correctly converted to PDKB-PDDL.")
     print("The resulting files, called \'" +parser.domain_name+".pdkpddl\' and \'" +parser.problem_name+".pdkpddl\', are in the \'out\pdkb\' folder.\n")
 #    print('State: ' + str(parser.state))
 #    for act in parser.actions:
