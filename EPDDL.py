@@ -1074,11 +1074,11 @@ class EPDDL_Parser:
 
     def print_effects_PDKB(self,action,out):
 
-        if (len(action.p_observers) > 0):
-            print("\n********CONVERSION WARNING********")
-            print("Partial observability cannot be directly translated to PDKB and therefore will be ignored.")
-            print("You should make use of the more explicit fields.")
-            print("**********************************\n")
+    #    if (len(action.p_observers) > 0):
+    #        print("\n********CONVERSION WARNING********")
+    #        print("Partial observability cannot be directly translated to PDKB and therefore will be ignored.")
+    #        print("You should make use of the more explicit fields.")
+    #        print("**********************************\n")
 
         out.write('\t\t:effect\t\t\t\t (and' )
         is_ontic = True;
@@ -1091,6 +1091,9 @@ class EPDDL_Parser:
         out.write(')\n')
 
     def subprint_effects_PDKB(self,action,out,is_ontic,printed, is_pos):
+        ag_printed = False
+        p_ag_printed = False
+
         count = 0
         if (is_pos):
             effects = action.add_effects
@@ -1117,18 +1120,70 @@ class EPDDL_Parser:
                     for ags in action.observers:
                         for ag in ags[0]:
                             if not 'FASTART' in ag:
+                                if self.print_conditions_PDKB(ags[1],ags[2],out) == 1:
+                                    ag_printed = True
+                                else:
+                                    ag_printed = False
                                 if count == 3:
                                     count = 0
                                     out.write('\n\t\t\t\t\t\t\t ')
-                                count = count + 1
+                                    count = count + 1
                                 out.write(' [' + ag + '](')
                                 if (is_pos):
                                     out.write(fluent + ')')
                                 else:
                                     out.write('!'+fluent + ')')
 
+                                if (len(action.p_observers) > 0):
+                                    for p_ags in action.p_observers:
+                                        for p_ag in p_ags[0]:
+                                            if not 'FASTART' in p_ag:
+                                                if self.print_conditions_PDKB(p_ags[1],p_ags[2],out) == 1:
+                                                    p_ag_printed = True
+                                                else:
+                                                    p_ag_printed = False
+                                                if count == 3:
+                                                    count = 0
+                                                    out.write('\n\t\t\t\t\t\t\t ')
+                                                count = count + 1
+                                                out.write(' [' + p_ag + '][' + ag + '](or')
+                                                out.write(' ('+fluent + ')')
+                                                out.write(' (!'+fluent + '))')
+                                            else:
+                                                print("\n********CONVERSION WARNING********")
+                                                print("Partial observability has not fully integrated the FORALL operator.")
+                                                print("You should make use of the more explicit fields if the results are not correct.")
+                                                print("**********************************\n")
+                                if p_ag_printed:
+                                    out.write(')')
+                                    p_ag_printed = False
+
+                            else:
+                                print("\n********CONVERSION WARNING********")
+                                print("Observability has not fully integrated the FORALL operator.")
+                                print("Please, check the resulting conversion.\nYou should make use of the more explicit fields if the results are not correct.")
+                                print("**********************************\n")
+                    if ag_printed:
+                        out.write(')')
+                        ag_printed = False
+
+                        #print ("Obs of " + action.name + ": " + str(ags))
+                        #for ag in ags[0]:
+                        #    if not 'FASTART' in ag:
+                        #        if count == 3:
+                        #            count = 0
+                        #            out.write('\n\t\t\t\t\t\t\t ')
+                        #        count = count + 1
+                        #        out.write(' [' + ag + '](')
+                        #        if (is_pos):
+                        #            out.write(fluent + ')')
+                        #        else:
+                        #            out.write('!'+fluent + ')')
+
+
+
                 elif not is_ontic:
-                    raise Exception('Each action needs at leat one fully observant agent.')
+                    raise Exception('Each action needs at least one fully observant agent.')
                 if printed == True:
                     out.write(')')
 
