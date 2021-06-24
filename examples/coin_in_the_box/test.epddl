@@ -18,7 +18,7 @@
     :effect (tail)
 	:observers	(?ag)
 	:p_observers (?ag2)
-	)
+  )
   
 
   (:action signal
