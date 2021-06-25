@@ -1303,9 +1303,10 @@ if __name__ == '__main__':
 
     problem = sys.argv[1]
     domain = parser.get_domain_name(problem)
+
     problem_path = os.path.dirname(problem)
     if problem_path != '':
-        domain = os.path.dirname(problem)+'/'+domain
+        domain = problem_path+'/'+domain
 
     output_folder = sys.argv[2]
 
@@ -1319,7 +1320,7 @@ if __name__ == '__main__':
     parser.print_EFP(output_folder)
 
     out = open(output_folder + "/" + "filename.tmp", "w")
-    out.write(parser.domain_name+"_"+parser.problem_name+".tmp")
+    out.write(output_folder + "/" +parser.domain_name+"_"+parser.problem_name+".tmp")
     #print("\nThe given files have been correctly converted to mAp.")
     #print("The resulting file, called \'" +parser.domain_name+"_"+parser.problem_name+".txt\', is in the \'out\efp\' folder.\n")
 
