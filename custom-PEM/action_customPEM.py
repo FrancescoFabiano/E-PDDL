@@ -76,18 +76,18 @@ class Action:
                     raise Exception('Unrecognized type ' + t)
             type_map.append(items)
             variables.append(var)
-        tmp_copy = {}
         for assignment in itertools.product(*type_map):
             if (not duplicates and len(assignment) == len(set(assignment))) or duplicates:
                 positive_preconditions = self.replace(self.positive_preconditions, variables, assignment, fluents, 1)
                 negative_preconditions = self.replace(self.negative_preconditions, variables, assignment, fluents, 1)
                 add_effects = self.pair_replace(self.add_effects, variables, assignment, fluents, 1)
                 del_effects = self.pair_replace(self.del_effects, variables, assignment, fluents, 1)
+                observers = {}
                 for obs_group in self.obs_groups:
-                    tmp_copy[obs_group] = self.pair_replace(self.observers[obs_group], variables, assignment, fluents, 0)
+                    observers[obs_group] = self.pair_replace(self.observers[obs_group], variables, assignment, fluents, 0)
 
             #    print("In work: " + str(observers) + "\n\n")
-                yield Action(self.name, self.act_type, assignment, positive_preconditions, negative_preconditions, add_effects, del_effects, self.copy_obs_list(tmp_copy), self.obs_groups)
+                yield Action(self.name, self.act_type, assignment, positive_preconditions, negative_preconditions, add_effects, del_effects, observers, self.obs_groups)
 
     #-----------------------------------------------
     # Replace
@@ -250,32 +250,32 @@ class Action:
 
         return fluent
 
-    def copy_obs_list(self, temp):
-        res = {}
-        for obs_group in self.obs_groups:
-            tmp_value = []
-            res[obs_group] = []
-            for value in temp[obs_group]:
-                i = 0
-                while i < len(value):
-                    sub_temp = []
-                    j = 0
-                    while j < len(value[i]):
-                        if i > 0:
-                            k = 0
-                            sub_sub_temp = []
-                            while k < len(value[i][j]):
-                                sub_sub_sub_temp = value[i][j][k]
-                                sub_sub_temp.insert(k, sub_sub_sub_temp)
-                                k = k+1
-                        else:
-                            sub_sub_temp = value[i][j]
-                        sub_temp.insert(j, sub_sub_temp)
-                        j = j+1
-                    tmp_value.insert(i, sub_temp)
-                    i = i+1
-                res[obs_group].append(tmp_value)
-        return res
+#    def copy_obs_list(self, temp):
+#        res = {}
+#        for obs_group in self.obs_groups:
+#            tmp_value = []
+#            res[obs_group] = []
+#            for value in temp[obs_group]:
+#                i = 0
+#                while i < len(value):
+#                    sub_temp = []
+#                    j = 0
+#                    while j < len(value[i]):
+#                        if i > 0:
+#                            k = 0
+#                            sub_sub_temp = []
+#                            while k < len(value[i][j]):
+#                                sub_sub_sub_temp = value[i][j][k]
+#                                sub_sub_temp.insert(k, sub_sub_sub_temp)
+#                                k = k+1
+#                        else:
+#                            sub_sub_temp = value[i][j]
+#                        sub_temp.insert(j, sub_sub_temp)
+#                        j = j+1
+#                    tmp_value.insert(i, sub_temp)
+#                    i = i+1
+#                res[obs_group].append(tmp_value)
+#        return res
 
 #-----------------------------------------------
 # Main

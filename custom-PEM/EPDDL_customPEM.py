@@ -271,7 +271,10 @@ class EPDDL_Parser:
             elif t == ':observers':
                 #self.read_observer(group.pop(0), f_obs, name, ' agents')
                 obs_group = re.sub(r'\{(.+)\}', r'\1', group.pop(0))
-                self.recoursive_reading(group.pop(0), [['']], [['']], [['']], 0, obs[obs_group], [], name, ' agents')
+                if obs_group in self.obs_groups:
+                    self.recoursive_reading(group.pop(0), [['']], [['']], [['']], 0, obs[obs_group], [], name, ' agents')
+                else:
+                    raise Exception('Undeclared observability group: ' + str(obs_group) + '.')
             elif t == ":derive":
                 derive_cond = group.pop(0)
             elif t == ":exp_effect":
@@ -583,6 +586,7 @@ class EPDDL_Parser:
             out.write('executable ' + action.name)
             self.print_precondition_EFP(action, out)
             self.print_effects_EFP(action, out)
+            out.write(action.name + ' has_type ' + action.act_type+';\n')
             self.print_observers_EFP(action, out)
             out.write('\n%%%\n\n')
         out.write('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n\n')
@@ -748,12 +752,7 @@ class EPDDL_Parser:
                 count +=1
 
     def print_effects_EFP(self,action,out):
-        if (action.act_type == 'sensing'):
-            act_type = ' determines '
-        elif (action.act_type == 'announcement'):
-            act_type = ' announces '
-        else:
-            act_type = ' causes '
+        act_type = ' has_effects '
 
         if (len(action.add_effects) > 0):
             for i in action.add_effects:
@@ -775,7 +774,7 @@ class EPDDL_Parser:
 
     def print_observers_EFP(self,action,out):
         for obs_group in self.obs_groups:
-            obs_type = ' observes ' + obs_group + ' '
+            obs_type = ' in_group ' + obs_group + ' of '
             observers = action.observers[obs_group]
 
             if (len(observers) > 0):
