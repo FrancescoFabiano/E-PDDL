@@ -1,3 +1,5 @@
+{include:testdomain.epddl}
+
 (define (problem pb1)
   (:domain coininthebox)
   (:agents a b c)
